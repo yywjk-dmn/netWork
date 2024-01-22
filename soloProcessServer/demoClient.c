@@ -15,19 +15,21 @@
 
 int main()
 {
+    /* 新建套接字 */
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd == -1)
     {
         perror("socket error");
         exit(-1);
     }
-
+  
     struct sockaddr_in serverAddress;
     memset(&serverAddress, 0, sizeof(serverAddress));
     /* 端口 */
     serverAddress.sin_family = AF_INET;
     serverAddress.sin_port = htons(SERVER_PORT);
 
+    /* 将IP地址转换成用于网络传输的二进制 */
     int ret = inet_pton(AF_INET, SERVER_IP, (void *)&serverAddress.sin_addr.s_addr);
     if (ret != 1)
     {
@@ -35,7 +37,7 @@ int main()
         exit(-1);
     }
 
-    /* IP地址 */
+    /* IP地址 进行连接 */
     ret = connect(sockfd, (struct sockaddr *)&serverAddress, sizeof(serverAddress));
     if (ret == -1)
     {
@@ -52,6 +54,7 @@ int main()
     while (1)
     {
 #if 0
+        /* 传输字符串 */
         strncpy(buffer, "hahahahah", sizeof(buffer) - 1);
 
         write(sockfd, buffer, sizeof(buffer));
@@ -59,14 +62,13 @@ int main()
         read(sockfd, recvBuffer, sizeof(recvBuffer) - 1);
         printf("recv: %s\n", recvBuffer);
 #else
-
+        /* 传输数字 */
         int num = 0X12345678;
         write(sockfd, (void *)&num, sizeof(num));
 #endif
     }
+
     sleep(5);
-
     close(sockfd);
-
     return 0;
 }

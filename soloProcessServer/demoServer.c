@@ -37,7 +37,7 @@ int main()
 
     /* 地址族,端口大小是1-65535(短整型 short) */
     localAddress.sin_family = AF_INET;
-    /* 端口需要转成大端 */
+    /* 端口需要转成大端 一般IPV4用的是s IPV6用的是l */
     localAddress.sin_port = htons(SERVER_PORT);
 #if 1
     /* IP地址转成大端 全0 */
