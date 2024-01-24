@@ -64,65 +64,64 @@ int main()
             perror("select error");
             break;
         }
-    }
-
-    /* 如果sockfd在readset集合中 那就说明一定有人要连接 */
-    if (FD_ISSET(sockfd, &readset))
-    {
-        int acceptfd = accept(sockfd, NULL, NULL);
-        if (acceptfd == -1)
+        /* 如果sockfd在readset集合中 那就说明一定有人要连接 */
+        if (FD_ISSET(sockfd, &readset))
         {
-            perror("accept error");
-            break;
+            int acceptfd = accept(sockfd, NULL, NULL);
+            if (acceptfd == -1)
+            {
+                perror("accept error");
+                break;
+            }
+            /* 将通信的句柄放在读集合 */
+            FD_SET(acceptfd, &readset);
+
+            /* 更新maxfd的值 */
+            maxfd = maxfd < acceptfd ? acceptfd : maxfd;
+
         }
-        /* 将通信的句柄放在读集合 */
-        FD_SET(acceptfd, &readset);
 
-        /* 更新maxfd的值 */
-        maxfd = maxfd < acceptfd ? accept : maxfd;
-
-    }
-
-    /* 程序到这个地方 说明可能有通信 */
-    for (int idx = 0; idx <= maxfd; idx ++)
-    {
-        if (idx != sockfd && FD_ISSET(idx, &readset))
+        /* 程序到这个地方 说明可能有通信 */
+        for (int idx = 0; idx <= maxfd; idx ++)
         {
-            char buffer[BUFFER_SIZE];
-            bzero(buffer, sizeof(buffer));
-            /* 程序到这里 一定有通信 */
-            int readBytes = read(idx, buffer, sizeof(buffer) - 1);
-            if (readBytes < 0)
+            if (idx != sockfd && FD_ISSET(idx, &readset))
             {
-                perro("read error");
-                /* 将该通信句柄从监听的读集合中删掉 */
-                FD_CLR(idx, &readset);
-                /* 关闭文件句柄 */
-                close(idx);
-                continue;
-            }
-            else if (readBytes == 0)
-            {
-                /* 说明客户端断开连接 */
-                printf("客户端断开连接。。。。\n");
-                /* 将该通信句柄从监听的读集合中删掉 */
-                FD_CLR(idx, &readset);
-                /* 关闭通信句柄 */
-                close(idx);
-                continue;
-            }
-            else
-            {
-                printf("recv:%s\n", buffer);
-                for (int jdx = 0; jdx < readBytes; jdx++)
+                char buffer[BUFFER_SIZE];
+                bzero(buffer, sizeof(buffer));
+                /* 程序到这里 一定有通信 */
+                int readBytes = read(idx, buffer, sizeof(buffer) - 1);
+                if (readBytes < 0)
                 {
-                    buffer[jdx] = toupper(buffer[jdx]);
+                    perro("read error");
+                    /* 将该通信句柄从监听的读集合中删掉 */
+                    FD_CLR(idx, &readset);
+                    /* 关闭文件句柄 */
+                    close(idx);
+                    continue;
                 }
-                /* 发回客户端 */
-                write(idx, buffer, readBytes);
-                usleep(500);
-            }
+                else if (readBytes == 0)
+                {
+                    /* 说明客户端断开连接 */
+                    printf("客户端断开连接。。。。\n");
+                    /* 将该通信句柄从监听的读集合中删掉 */
+                    FD_CLR(idx, &readset);
+                    /* 关闭通信句柄 */
+                    close(idx);
+                    continue;
+                }
+                else
+                {
+                    printf("recv:%s\n", buffer);
+                    for (int jdx = 0; jdx < readBytes; jdx++)
+                    {
+                        buffer[jdx] = toupper(buffer[jdx]);
+                    }
+                    /* 发回客户端 */
+                    write(idx, buffer, readBytes);
+                    usleep(500);
+                }
 
+            }
         }
     }
     /* 关闭文件描述符 */
